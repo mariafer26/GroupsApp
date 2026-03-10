@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>GroupsApp - Chat</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: url('/fondochat.jpg') no-repeat center center fixed;
+            background-size: cover;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 30px;
+        }
+
+        /* Contenedor flotante del chat */
+        .chat-container {
+            width: 600px;
+            height: 85vh;
+            display: flex;
+            flex-direction: column;
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 24px;
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+        }
+
+        .navbar {
+            background: transparent;
+            padding: 14px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            flex-shrink: 0;
+        }
+
+        .navbar .izquierda {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .navbar .volver {
+            background: none;
+            border: none;
+            color: #f48fb1;
+            font-size: 22px;
+            cursor: pointer;
+        }
+
+        .navbar .info .canal {
+            color: #333;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .navbar .info .grupo {
+            color: #aaa;
+            font-size: 11px;
+        }
+
+        .navbar .usuario {
+            color: #aaa;
+            font-size: 11px;
+        }
+
+        .status-bar {
+            text-align: center;
+            padding: 4px;
+            font-size: 11px;
+            color: #666;
+            background: transparent;
+            flex-shrink: 0;
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            background: transparent;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .message {
+            display: flex;
+            flex-direction: column;
+            max-width: 80%;
+        }
+
+        .message.mine {
+            align-self: flex-end;
+            align-items: flex-end;
+        }
+
+        .message.other {
+            align-self: flex-start;
+            align-items: flex-start;
+        }
+
+        .message .sender {
+            font-size: 10px;
+            color: #aaa;
+            margin-bottom: 2px;
+        }
+
+        .message .bubble {
+            padding: 9px 13px;
+            border-radius: 14px;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .message.mine .bubble {
+            background: linear-gradient(135deg, #f48fb1, #e91e8c);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.other .bubble {
+            background: rgba(255, 255, 255, 0.7);
+            color: #333;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-bottom-left-radius: 4px;
+        }
+
+        .message .tiempo {
+            font-size: 9px;
+            color: #ccc;
+            margin-top: 2px;
+        }
+
+        .input-area {
+            padding: 12px 14px;
+            background: transparent;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+            flex-shrink: 0;
+        }
+
+        .input-area input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1.5px solid rgba(255, 255, 255, 0.5);
+            border-radius: 20px;
+            font-size: 13px;
+            outline: none;
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        .input-area input:focus {
+            border-color: #f48fb1;
+            background: white;
+        }
+
+        .input-area button {
+            background: linear-gradient(135deg, #f48fb1, #e91e8c);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .input-area button:hover {
+            opacity: 0.9;
+        }
+
+        .empty {
+            text-align: center;
+            color: #ccc;
+            margin: auto;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="chat-container">
+        <div class="navbar">
+            <div class="izquierda">
+                <button class="volver" onclick="window.location.href='/canales.html'">‹</button>
+                <div class="info">
+                    <div class="canal"> <span id="canalNombre"></span></div>
+                    <div class="grupo">📁 <span id="grupoNombre"></span></div>
+                </div>
+            </div>
+            <span class="usuario">👤 <span id="nombreUsuario"></span></span>
+        </div>
+
+        <div class="status-bar" id="statusBar">Conectando...</div>
+
+        <div class="messages" id="messages">
+            <div class="empty" id="empty">No hay mensajes todavía. ¡Di holis! 👋</div>
+        </div>
+
+        <div class="input-area">
+            <input id="messageInput" placeholder="Escribe un mensaje..."
+                onkeypress="if(event.key==='Enter') enviar()" />
+            <button onclick="enviar()">Enviar</button>
+        </div>
+    </div>
+
+    <script>
+        // Leer datos del localStorage automáticamente
+        const token = localStorage.getItem('token');
+        const username = localStorage.getItem('username');
+        const canalId = localStorage.getItem('canalId');
+        const canalNombre = localStorage.getItem('canalNombre');
+        const grupoNombre = localStorage.getItem('grupoNombre');
+
+        // Si no hay sesión, redirigir
+        if (!token) window.location.href = '/login.html';
+        if (!canalId) window.location.href = '/grupos.html';
+
+        // Mostrar info en navbar
+        document.getElementById('canalNombre').textContent = canalNombre;
+        document.getElementById('grupoNombre').textContent = grupoNombre;
+        document.getElementById('nombreUsuario').textContent = username;
+
+        // Cargar historial de mensajes
+        async function cargarHistorial() {
+            try {
+                const response = await fetch(`/api/channels/${canalId}/messages`, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await response.json();
+
+                if (data.messages && data.messages.length > 0) {
+                    document.getElementById('empty').style.display = 'none';
+                    data.messages.forEach(msg => {
+                        mostrarMensaje({
+                            username: msg.sender?.username || 'Usuario',
+                            content: msg.content,
+                            tiempo: new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                        });
+                    });
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        cargarHistorial();
+
+        // Conectar Socket.IO automáticamente
+        const socket = io('http://localhost:3000');
+
+        socket.on('connect', () => {
+            document.getElementById('statusBar').textContent = ' Conectado';
+            socket.emit('join_channel', canalId);
+        });
+
+        socket.on('disconnect', () => {
+            document.getElementById('statusBar').textContent = 'Desconectado';
+        });
+
+        socket.on('new_message', (data) => {
+            if (data.username !== username) {
+                document.getElementById('empty').style.display = 'none';
+                mostrarMensaje(data);
+            }
+        });
+
+        function enviar() {
+            const input = document.getElementById('messageInput');
+            const content = input.value.trim();
+            if (!content) return;
+
+            const data = { channelId: canalId, content, username };
+
+            // Mostrar mi mensaje inmediatamente
+            document.getElementById('empty').style.display = 'none';
+            mostrarMensaje({ ...data, esMio: true });
+
+            // Enviar por socket
+            socket.emit('send_message', data);
+
+            // También guardar en BD
+            fetch(`/api/channels/${canalId}/messages`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ content })
+            });
+
+            input.value = '';
+        }
+
+        function mostrarMensaje(data) {
+            const messages = document.getElementById('messages');
+            const isMine = data.esMio || data.username === username;
+            const hora = data.tiempo || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            const div = document.createElement('div');
+            div.className = `message ${isMine ? 'mine' : 'other'}`;
+            div.innerHTML = `
+        ${!isMine ? `<div class="sender">${data.username}</div>` : ''}
+        <div class="bubble">${data.content}</div>
+        <div class="tiempo">${hora}</div>
+      `;
+            messages.appendChild(div);
+            messages.scrollTop = messages.scrollHeight;
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>GroupsApp - Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #ffffff20;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: url('/fondo2.jpg') no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 8px 32px rgba(244, 143, 177, 0.15);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo h1 {
+            color: #e678f0;
+            font-size: 28px;
+        }
+
+        .logo p {
+            color: #aaa;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            margin: 8px 0;
+            border: 1.5px solid #fbbbfb;
+            border-radius: 10px;
+            font-size: 15px;
+            outline: none;
+            background: #f0f8ff;
+            transition: border 0.2s;
+        }
+
+        input:focus {
+            border-color: #e154e6;
+            background: white;
+        }
+
+        button {
+            width: 100%;
+            padding: 13px;
+            background: linear-gradient(135deg, #eb88f8, #ed31ed);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .error {
+            background: #ffe0e0;
+            color: #c0392b;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .success {
+            background: #e3f2fd;
+            color: #e34cd9;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .register-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #f3b1ee;
+        }
+
+        .register-link a {
+            color: #e579f4;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <div class="logo">
+            <h1>💬 GroupsApp</h1>
+            <p>Inicia sesión</p>
+        </div>
+
+        <input id="email" type="email" placeholder="Correo electrónico" />
+        <input id="password" type="password" placeholder="Contraseña" />
+        <button onclick="login()">Entrar</button>
+
+        <div class="error" id="error"></div>
+        <div class="success" id="success"></div>
+
+        <div class="register-link">
+            ¿No tienes cuenta? <a href="/register.html">Regístrate</a>
+        </div>
+    </div>
+
+    <script>
+        async function login() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('success').style.display = 'none';
+
+            if (!email || !password) {
+                mostrarError('Completa todos los campos');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    mostrarError(data.error || 'Error al iniciar sesión');
+                    return;
+                }
+
+                // Guardar token y usuario en el navegador
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('username', data.user.username);
+                localStorage.setItem('userId', data.user.id);
+
+                mostrarExito('¡Bienvenida! Redirigiendo...');
+                setTimeout(() => {
+                    window.location.href = '/grupos.html';
+                }, 1500);
+
+            } catch (error) {
+                mostrarError('Error de conexión');
+            }
+        }
+
+        function mostrarError(msg) {
+            const el = document.getElementById('error');
+            el.textContent = msg;
+            el.style.display = 'block';
+        }
+
+        function mostrarExito(msg) {
+            const el = document.getElementById('success');
+            el.textContent = msg;
+            el.style.display = 'block';
+        }
+    </script>
+</body>
+
+</html>

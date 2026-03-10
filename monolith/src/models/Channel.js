@@ -1,8 +1,8 @@
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../database');
-const User = require('./User');
+const Group = require('./Group');
 
-const Group = sequelize.define('Group', {
+const Channel = sequelize.define('Channel', {
     id: {
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
@@ -12,20 +12,12 @@ const Group = sequelize.define('Group', {
         type: DataTypes.STRING,
         allowNull: false
     },
-    description: {
-        type: DataTypes.TEXT
-    },
-    adminId: {
+    groupId: {
         type: DataTypes.UUID,
         allowNull: false
-    },
-    inviteCode: {
-        type: DataTypes.STRING,
-        unique: true
     }
 });
 
-// Un grupo tiene un administrador
-Group.belongsTo(User, { foreignKey: 'adminId', as: 'admin' });
+Channel.belongsTo(Group, { foreignKey: 'groupId' });
 
-module.exports = Group;
+module.exports = Channel;

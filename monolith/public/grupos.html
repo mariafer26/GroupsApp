@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>GroupsApp - Mis Grupos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: url('/fondochat.jpg') no-repeat center center fixed;
+            background-size: cover;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(244, 143, 177, 0.15);
+        }
+
+        .navbar h1 {
+            color: #f48fb1;
+            font-size: 22px;
+        }
+
+        .navbar .user {
+            color: #aaa;
+            font-size: 14px;
+        }
+
+        .navbar button {
+            background: none;
+            border: 1.5px solid #f48fb1;
+            color: #f48fb1;
+            padding: 6px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .navbar button:hover {
+            background: #fce4ec;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            background: #fff0f5;
+            border-radius: 12px;
+            padding: 5px;
+            margin-bottom: 20px;
+            border: 1.5px solid #f8bbd0;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            border-radius: 9px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #aaa;
+            transition: all 0.2s;
+            border: none;
+            background: none;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #f48fb1, #e91e8c);
+            color: white;
+            font-weight: bold;
+        }
+
+        /* Formularios */
+        .form-box {
+            background: #fff0f5;
+            border: 1.5px solid #f8bbd0;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .form-box h2 {
+            color: #f48fb1;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .form-box input {
+            width: 100%;
+            padding: 10px 15px;
+            margin: 6px 0;
+            border: 1.5px solid #f8bbd0;
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+            background: white;
+        }
+
+        .form-box input:focus {
+            border-color: #f48fb1;
+        }
+
+        .form-box button.btn-main {
+            width: 100%;
+            padding: 11px;
+            background: linear-gradient(135deg, #f48fb1, #e91e8c);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+
+        .form-box button.btn-main:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        /* Lista grupos */
+        .grupos-titulo {
+            color: #f48fb1;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .grupo-card {
+            background: white;
+            border: 1.5px solid #f8bbd0;
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .grupo-card:hover {
+            background: #fff0f5;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(244, 143, 177, 0.15);
+        }
+
+        .grupo-card .info {
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .grupo-card .nombre {
+            color: #333;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .grupo-card .desc {
+            color: #aaa;
+            font-size: 13px;
+            margin-top: 3px;
+        }
+
+        .btn-codigo {
+            background: none;
+            border: 1.5px solid #f8bbd0;
+            color: #f48fb1;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            white-space: nowrap;
+            margin-left: 10px;
+            transition: background 0.2s;
+        }
+
+        .btn-codigo:hover {
+            background: #fce4ec;
+        }
+
+        /* Modal código */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 380px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(244, 143, 177, 0.2);
+        }
+
+        .modal h3 {
+            color: #f48fb1;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .codigo-box {
+            background: #fff0f5;
+            border: 1.5px dashed #f48fb1;
+            border-radius: 10px;
+            padding: 15px;
+            font-size: 28px;
+            font-weight: bold;
+            color: #e91e8c;
+            letter-spacing: 4px;
+            margin: 15px 0;
+        }
+
+        .link-box {
+            background: #f9f9f9;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 12px;
+            color: #888;
+            word-break: break-all;
+            margin-bottom: 15px;
+        }
+
+        .modal-btns {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-btns button {
+            flex: 1;
+            padding: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            border: none;
+        }
+
+        .btn-copiar {
+            background: linear-gradient(135deg, #f48fb1, #e91e8c);
+            color: white;
+        }
+
+        .btn-cerrar {
+            background: #f5f5f5;
+            color: #888;
+        }
+
+        .empty {
+            text-align: center;
+            color: #ccc;
+            padding: 40px;
+            font-size: 15px;
+        }
+
+        .error {
+            background: #ffe0e0;
+            color: #c0392b;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-top: 8px;
+            display: none;
+        }
+
+        .success {
+            background: #fce4ec;
+            color: #e91e8c;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-top: 8px;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="navbar">
+        <h1>💬 GroupsApp</h1>
+        <span class="user" id="nombreUsuario"></span>
+        <button onclick="cerrarSesion()">Cerrar sesión</button>
+    </div>
+
+    <div class="container">
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" id="tab-crear" onclick="mostrarTab('crear')">➕ Crear grupo</button>
+            <button class="tab" id="tab-unirse" onclick="mostrarTab('unirse')">🔗 Unirse con código</button>
+        </div>
+
+        <!-- Crear grupo -->
+        <div class="form-box" id="form-crear">
+            <h2>Nuevo grupo</h2>
+            <input id="nombreGrupo" type="text" placeholder="Nombre del grupo" />
+            <input id="descGrupo" type="text" placeholder="Descripción (opcional)" />
+            <button class="btn-main" onclick="crearGrupo()">Crear grupo</button>
+            <div class="error" id="errorCrear"></div>
+        </div>
+
+        <!-- Unirse con código -->
+        <div class="form-box" id="form-unirse" style="display:none;">
+            <h2>Unirse a un grupo</h2>
+            <input id="codigoInput" type="text" placeholder="Escribe el código del grupo" maxlength="8"
+                style="letter-spacing:3px; font-size:18px; text-align:center;" />
+            <button class="btn-main" onclick="unirseConCodigo()">Unirme</button>
+            <div class="error" id="errorUnirse"></div>
+            <div class="success" id="successUnirse"></div>
+        </div>
+
+        <!-- Lista de grupos -->
+        <p class="grupos-titulo">Mis grupos</p>
+        <div id="listaGrupos">
+            <div class="empty">Cargando grupos...</div>
+        </div>
+
+    </div>
+
+    <!-- Modal código -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <h3>🔗 Código de invitación</h3>
+            <p style="color:#aaa; font-size:13px;">Comparte este código para que otros se unan</p>
+            <div class="codigo-box" id="modalCodigo"></div>
+            <div class="link-box" id="modalLink"></div>
+            <div class="modal-btns">
+                <button class="btn-copiar" onclick="copiarLink()">📋 Copiar link</button>
+                <button class="btn-cerrar" onclick="cerrarModal()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        const username = localStorage.getItem('username');
+        if (!token) window.location.href = '/login.html';
+
+        document.getElementById('nombreUsuario').textContent = '👤 ' + username;
+        cargarGrupos();
+
+        function mostrarTab(tab) {
+            document.getElementById('form-crear').style.display = tab === 'crear' ? 'block' : 'none';
+            document.getElementById('form-unirse').style.display = tab === 'unirse' ? 'block' : 'none';
+            document.getElementById('tab-crear').classList.toggle('active', tab === 'crear');
+            document.getElementById('tab-unirse').classList.toggle('active', tab === 'unirse');
+        }
+
+        async function cargarGrupos() {
+            try {
+                const response = await fetch('/api/groups/my', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await response.json();
+                const lista = document.getElementById('listaGrupos');
+
+                if (!data.groups || data.groups.length === 0) {
+                    lista.innerHTML = '<div class="empty">No tienes grupos todavía. ¡Crea uno!</div>';
+                    return;
+                }
+
+                lista.innerHTML = '';
+                data.groups.forEach(grupo => {
+                    if (!grupo) return;
+                    const div = document.createElement('div');
+                    div.className = 'grupo-card';
+                    div.innerHTML = `
+            <div class="info" onclick="abrirGrupo('${grupo.id}', '${grupo.name}')">
+              <div class="nombre">👥 ${grupo.name}</div>
+              <div class="desc">${grupo.description || 'Sin descripción'}</div>
+            </div>
+            <button class="btn-codigo" onclick="generarCodigo('${grupo.id}')">🔑 Código</button>
+          `;
+                    lista.appendChild(div);
+                });
+            } catch (error) { console.error(error); }
+        }
+
+        function abrirGrupo(id, nombre) {
+            localStorage.setItem('grupoId', id);
+            localStorage.setItem('grupoNombre', nombre);
+            window.location.href = '/canales.html';
+        }
+
+        async function crearGrupo() {
+            const name = document.getElementById('nombreGrupo').value.trim();
+            const description = document.getElementById('descGrupo').value.trim();
+            document.getElementById('errorCrear').style.display = 'none';
+
+            if (!name) { mostrarError('errorCrear', 'El nombre es obligatorio'); return; }
+
+            try {
+                const response = await fetch('/api/groups', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                    body: JSON.stringify({ name, description })
+                });
+                const data = await response.json();
+                if (!response.ok) { mostrarError('errorCrear', data.error); return; }
+
+                document.getElementById('nombreGrupo').value = '';
+                document.getElementById('descGrupo').value = '';
+                cargarGrupos();
+            } catch (e) { mostrarError('errorCrear', 'Error de conexión'); }
+        }
+
+        async function unirseConCodigo() {
+            const code = document.getElementById('codigoInput').value.trim();
+            document.getElementById('errorUnirse').style.display = 'none';
+            document.getElementById('successUnirse').style.display = 'none';
+
+            if (!code) { mostrarError('errorUnirse', 'Escribe un código'); return; }
+
+            try {
+                const response = await fetch(`/api/groups/join/${code}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await response.json();
+
+                if (!response.ok) { mostrarError('errorUnirse', data.error); return; }
+
+                document.getElementById('successUnirse').textContent = data.message + ' 🎉';
+                document.getElementById('successUnirse').style.display = 'block';
+                document.getElementById('codigoInput').value = '';
+                setTimeout(() => cargarGrupos(), 1000);
+            } catch (e) { mostrarError('errorUnirse', 'Error de conexión'); }
+        }
+
+        async function generarCodigo(grupoId) {
+            try {
+                const response = await fetch(`/api/groups/${grupoId}/invite`, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await response.json();
+
+                document.getElementById('modalCodigo').textContent = data.inviteCode;
+                document.getElementById('modalLink').textContent = data.inviteLink;
+                document.getElementById('modalOverlay').classList.add('show');
+            } catch (e) { alert('Error al generar código'); }
+        }
+
+        function copiarLink() {
+            const link = document.getElementById('modalLink').textContent;
+            navigator.clipboard.writeText(link);
+            alert('¡Link copiado al portapapeles!');
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalOverlay').classList.remove('show');
+        }
+
+        function cerrarSesion() {
+            localStorage.clear();
+            window.location.href = '/login.html';
+        }
+
+        function mostrarError(id, msg) {
+            const el = document.getElementById(id);
+            el.textContent = msg;
+            el.style.display = 'block';
+        }
+    </script>
+</body>
+
+</html>

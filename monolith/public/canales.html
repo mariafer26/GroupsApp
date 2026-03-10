@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>GroupsApp - Canales</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: url('/fondochat.jpg') no-repeat center center fixed;
+            background-size: cover;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(244, 143, 177, 0.15);
+        }
+
+        .navbar .izquierda {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .navbar h1 {
+            color: #f48fb1;
+            font-size: 20px;
+        }
+
+        .navbar .grupo-nombre {
+            color: #333;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .navbar .volver {
+            background: none;
+            border: none;
+            color: #f48fb1;
+            font-size: 22px;
+            cursor: pointer;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .crear-canal {
+            background: #fff0f5;
+            border: 1.5px solid #f8bbd0;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .crear-canal h2 {
+            color: #f48fb1;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .crear-canal input {
+            width: 100%;
+            padding: 10px 15px;
+            margin: 6px 0;
+            border: 1.5px solid #f8bbd0;
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+            background: white;
+        }
+
+        .crear-canal input:focus {
+            border-color: #f48fb1;
+        }
+
+        .crear-canal button {
+            width: 100%;
+            padding: 11px;
+            background: linear-gradient(135deg, #f48fb1, #e91e8c);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+
+        .crear-canal button:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .canales-titulo {
+            color: #f48fb1;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .canal-card {
+            background: white;
+            border: 1.5px solid #f8bbd0;
+            border-radius: 12px;
+            padding: 18px 20px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .canal-card:hover {
+            background: #fff0f5;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(244, 143, 177, 0.15);
+        }
+
+        .canal-card .nombre {
+            color: #333;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .canal-card .flecha {
+            color: #f48fb1;
+            font-size: 20px;
+        }
+
+        .empty {
+            text-align: center;
+            color: #ccc;
+            padding: 40px;
+            font-size: 15px;
+        }
+
+        .error {
+            background: #ffe0e0;
+            color: #c0392b;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-top: 8px;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="navbar">
+        <div class="izquierda">
+            <button class="volver" onclick="window.location.href='/grupos.html'">‹</button>
+            <div>
+                <div style="color:#aaa; font-size:12px;">Grupo</div>
+                <div class="grupo-nombre" id="grupoNombre"></div>
+            </div>
+        </div>
+        <span style="color:#aaa; font-size:14px;" id="nombreUsuario"></span>
+    </div>
+
+    <div class="container">
+
+        <div class="crear-canal">
+            <h2>➕ Crear nuevo canal</h2>
+            <input id="nombreCanal" type="text" placeholder="Nombre del canal (ej: general, anuncios)" />
+            <button onclick="crearCanal()">Crear canal</button>
+            <div class="error" id="error"></div>
+        </div>
+
+        <p class="canales-titulo">Canales del grupo</p>
+        <div id="listaCanales">
+            <div class="empty">Cargando canales...</div>
+        </div>
+
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        const username = localStorage.getItem('username');
+        const grupoId = localStorage.getItem('grupoId');
+        const grupoNombre = localStorage.getItem('grupoNombre');
+
+        if (!token) window.location.href = '/login.html';
+        if (!grupoId) window.location.href = '/grupos.html';
+
+        document.getElementById('grupoNombre').textContent = grupoNombre;
+        document.getElementById('nombreUsuario').textContent = '👤 ' + username;
+
+        cargarCanales();
+
+        async function cargarCanales() {
+            try {
+                const response = await fetch(`/api/channels/grupos/${grupoId}/list`, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+
+                const data = await response.json();
+                const lista = document.getElementById('listaCanales');
+
+                if (!data.channels || data.channels.length === 0) {
+                    lista.innerHTML = '<div class="empty">No hay canales todavía. ¡Crea uno!</div>';
+                    return;
+                }
+
+                lista.innerHTML = '';
+                data.channels.forEach(canal => {
+                    const div = document.createElement('div');
+                    div.className = 'canal-card';
+                    div.innerHTML = `
+            <div class="nombre"># ${canal.name}</div>
+            <span class="flecha">›</span>
+          `;
+                    div.onclick = () => {
+                        localStorage.setItem('canalId', canal.id);
+                        localStorage.setItem('canalNombre', canal.name);
+                        window.location.href = '/chat.html';
+                    };
+                    lista.appendChild(div);
+                });
+
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        async function crearCanal() {
+            const name = document.getElementById('nombreCanal').value.trim();
+            document.getElementById('error').style.display = 'none';
+
+            if (!name) {
+                mostrarError('El nombre del canal es obligatorio');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/channels/groups/${grupoId}/channels`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({ name })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    mostrarError(data.error || 'Error al crear canal');
+                    return;
+                }
+
+                document.getElementById('nombreCanal').value = '';
+                cargarCanales();
+
+            } catch (error) {
+                mostrarError('Error de conexión');
+            }
+        }
+
+        function mostrarError(msg) {
+            const el = document.getElementById('error');
+            el.textContent = msg;
+            el.style.display = 'block';
+        }
+    </script>
+</body>
+
+</html>
