@@ -345,6 +345,21 @@
             <h2>Nuevo grupo</h2>
             <input id="nombreGrupo" type="text" placeholder="Nombre del grupo" />
             <input id="descGrupo" type="text" placeholder="Descripción (opcional)" />
+            <select id="tipoGrupo" style="
+              width: 100%;
+              padding: 10px 15px;
+              margin: 6px 0;
+              border: 1px solid rgba(255, 255, 255, 0.3);
+              border-radius: 10px;
+              font-size: 14px;
+              outline: none;
+              background: rgba(255, 255, 255, 0.12);
+              color: white;
+              cursor: pointer;
+            ">
+                <option value="public" style="color:#333">🌐 Público — cualquiera con el código puede unirse</option>
+                <option value="approval" style="color:#333">✋ Con aprobación — el admin aprueba cada solicitud</option>
+            </select>
             <button class="btn-main" onclick="crearGrupo()">Crear grupo</button>
             <div class="error" id="errorCrear"></div>
         </div>
@@ -370,11 +385,25 @@
     <!-- Modal código -->
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal">
-            <h3>🔗 Código de invitación</h3>
+            <h3> Código de invitación</h3>
             <p style="color:#aaa; font-size:13px;">Comparte este código para que otros se unan</p>
             <div class="codigo-box" id="modalCodigo"></div>
             <div class="modal-btns">
                 <button class="btn-cerrar" onclick="cerrarModal()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal solicitudes de unión -->
+    <div class="modal-overlay" id="modalSolicitudes">
+        <div class="modal" style="max-width:480px; text-align:left;">
+            <h3 style="text-align:center;"> Solicitudes de unión</h3>
+            <p style="color:#aaa; font-size:13px; text-align:center; margin-bottom:15px;">Aprueba o rechaza las
+                solicitudes pendientes</p>
+            <div id="listaSolicitudes" style="max-height:320px; overflow-y:auto;"></div>
+            <div style="margin-top:15px; text-align:center;">
+                <button class="btn-cerrar" onclick="cerrarModalSolicitudes()"
+                    style="padding:10px 24px; border-radius:10px; cursor:pointer; background:rgba(255,255,255,0.1); border:none; color:#aaa;">Cerrar</button>
             </div>
         </div>
     </div>
@@ -412,12 +441,20 @@
                     if (!grupo) return;
                     const div = document.createElement('div');
                     div.className = 'grupo-card';
+                    const userId = localStorage.getItem('userId');
+                    const esAdmin = grupo.adminId === userId;
+                    const esAprobacion = grupo.subscriptionType === 'approval';
+                    const iconoTipo = esAprobacion ? '✋' : '🌐';
+
                     div.innerHTML = `
             <div class="info" onclick="abrirGrupo('${grupo.id}', '${grupo.name}')">
-              <div class="nombre"> ${grupo.name}</div>
+              <div class="nombre"> ${grupo.name} ${iconoTipo}</div>
               <div class="desc">${grupo.description || 'Sin descripción'}</div>
             </div>
-            <button class="btn-codigo" onclick="generarCodigo('${grupo.id}')">🔑 Código</button>
+            <div style="display:flex; gap:6px; flex-shrink:0;">
+              ${esAdmin && esAprobacion ? `<button class="btn-codigo" style="background:rgba(244,143,177,0.25); border-color:rgba(244,143,177,0.5);" onclick="verSolicitudes('${grupo.id}', '${grupo.name}')"> Solicitudes</button>` : ''}
+              <button class="btn-codigo" onclick="generarCodigo('${grupo.id}')"> Código</button>
+            </div>
           `;
                     lista.appendChild(div);
                 });
@@ -433,6 +470,7 @@
         async function crearGrupo() {
             const name = document.getElementById('nombreGrupo').value.trim();
             const description = document.getElementById('descGrupo').value.trim();
+            const subscriptionType = document.getElementById('tipoGrupo').value;
             document.getElementById('errorCrear').style.display = 'none';
 
             if (!name) { mostrarError('errorCrear', 'El nombre es obligatorio'); return; }
@@ -441,13 +479,14 @@
                 const response = await fetch('/api/groups', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-                    body: JSON.stringify({ name, description })
+                    body: JSON.stringify({ name, description, subscriptionType })
                 });
                 const data = await response.json();
                 if (!response.ok) { mostrarError('errorCrear', data.error); return; }
 
                 document.getElementById('nombreGrupo').value = '';
                 document.getElementById('descGrupo').value = '';
+                document.getElementById('tipoGrupo').value = 'public';
                 cargarGrupos();
             } catch (e) { mostrarError('errorCrear', 'Error de conexión'); }
         }
@@ -468,7 +507,7 @@
 
                 if (!response.ok) { mostrarError('errorUnirse', data.error); return; }
 
-                document.getElementById('successUnirse').textContent = data.message + ' 🎉';
+                document.getElementById('successUnirse').textContent = data.message;
                 document.getElementById('successUnirse').style.display = 'block';
                 document.getElementById('codigoInput').value = '';
                 setTimeout(() => cargarGrupos(), 1000);
@@ -485,6 +524,60 @@
                 document.getElementById('modalCodigo').textContent = data.inviteCode;
                 document.getElementById('modalOverlay').classList.add('show');
             } catch (e) { alert('Error al generar código'); }
+        }
+
+        async function verSolicitudes(grupoId, grupoNombre) {
+            document.getElementById('modalSolicitudes').classList.add('show');
+            document.getElementById('listaSolicitudes').innerHTML = '<p style="color:#aaa; text-align:center;">Cargando...</p>';
+            await cargarSolicitudes(grupoId);
+        }
+
+        let grupoIdActual = null;
+        async function cargarSolicitudes(grupoId) {
+            grupoIdActual = grupoId;
+            try {
+                const response = await fetch(`/api/groups/${grupoId}/requests`, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await response.json();
+                const lista = document.getElementById('listaSolicitudes');
+
+                if (!data.requests || data.requests.length === 0) {
+                    lista.innerHTML = '<p style="color:#aaa; text-align:center; padding:20px;">No hay solicitudes pendientes ✨</p>';
+                    return;
+                }
+
+                lista.innerHTML = data.requests.map(r => `
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px; margin-bottom:8px; background:rgba(255,255,255,0.08); border-radius:10px;">
+                        <div>
+                            <div style="color:#fff; font-weight:bold;">👤 ${r.User?.username || 'Usuario'}</div>
+                            <div style="color:#aaa; font-size:12px;">${r.User?.email || ''}</div>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button onclick="responderSolicitud('${r.id}', 'approve')" style="background:rgba(46,204,113,0.25); border:1px solid rgba(46,204,113,0.5); color:#2ecc71; padding:6px 12px; border-radius:8px; cursor:pointer; font-size:13px;">✓ Aceptar</button>
+                            <button onclick="responderSolicitud('${r.id}', 'reject')" style="background:rgba(231,76,60,0.2); border:1px solid rgba(231,76,60,0.4); color:#e74c3c; padding:6px 12px; border-radius:8px; cursor:pointer; font-size:13px;">✕ Rechazar</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                document.getElementById('listaSolicitudes').innerHTML = '<p style="color:#e74c3c; text-align:center;">Error al cargar solicitudes</p>';
+            }
+        }
+
+        async function responderSolicitud(requestId, action) {
+            try {
+                await fetch(`/api/groups/${grupoIdActual}/requests/${requestId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                    body: JSON.stringify({ action })
+                });
+                await cargarSolicitudes(grupoIdActual);
+            } catch (e) { alert('Error al procesar la solicitud'); }
+        }
+
+        function cerrarModalSolicitudes() {
+            document.getElementById('modalSolicitudes').classList.remove('show');
+            grupoIdActual = null;
         }
 
         function copiarLink() {

@@ -19,6 +19,10 @@ const Group = sequelize.define('Group', {
         type: DataTypes.UUID,
         allowNull: false
     },
+    subscriptionType: {
+        type: DataTypes.ENUM('public', 'approval'),
+        defaultValue: 'public'
+    },
     inviteCode: {
         type: DataTypes.STRING,
         unique: true

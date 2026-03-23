@@ -14,6 +14,7 @@ require('./models/GroupMember');
 require('./models/Channel');
 require('./models/Message');
 require('./models/MessageStatus');
+require('./models/JoinRequest');
 
 const authRoutes = require('./routes/authRoutes');
 const groupRoutes = require('./routes/groupRoutes');
@@ -36,6 +37,8 @@ app.get('/health', (req, res) => {
     res.json({ status: 'ok', message: 'GroupsApp corriendo!' });
 });
 
+// Mapa: channelId -> Set de usernames conectados
+const channelUsers = new Map();
 
 io.on('connection', (socket) => {
     console.log(`Usuario conectado: ${socket.id}`);
@@ -44,6 +47,20 @@ io.on('connection', (socket) => {
     socket.on('join_channel', (channelId) => {
         socket.join(channelId);
         console.log(`Usuario ${socket.id} se unió al canal ${channelId}`);
+    });
+
+    // Usuario anuncia su presencia en el canal
+    socket.on('user_join_presence', ({ channelId, username }) => {
+        socket.data.username = username;
+        socket.data.channelId = channelId;
+
+        if (!channelUsers.has(channelId)) channelUsers.set(channelId, new Set());
+        channelUsers.get(channelId).add(username);
+
+        const onlineList = [...channelUsers.get(channelId)];
+
+        // Notificar a todos en el canal (incluyendo al remitente) la lista completa
+        io.to(channelId).emit('online_users', { users: onlineList });
     });
 
     // Usuario envía un mensaje
@@ -60,6 +77,13 @@ io.on('connection', (socket) => {
 
     // Usuario se desconecta
     socket.on('disconnect', () => {
+        const { username, channelId } = socket.data;
+        if (username && channelId && channelUsers.has(channelId)) {
+            channelUsers.get(channelId).delete(username);
+            // Emitir lista actualizada a todos en el canal
+            io.to(channelId).emit('online_users', { users: [...channelUsers.get(channelId)] });
+            console.log(`${username} se desconectó del canal ${channelId}`);
+        }
         console.log(`Usuario desconectado: ${socket.id}`);
     });
 });

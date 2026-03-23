@@ -87,6 +87,43 @@
             flex-shrink: 0;
         }
 
+        /* Barra de presencia */
+        .online-bar {
+            padding: 5px 16px;
+            font-size: 11px;
+            color: #aaa;
+            border-bottom: 1px solid rgba(255,255,255,0.15);
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+            min-height: 26px;
+            align-items: center;
+        }
+        .presence-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+        }
+        .presence-pill .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #aaa;
+            transition: background 0.4s;
+            flex-shrink: 0;
+        }
+        .presence-pill .dot.online {
+            background: #4CAF50;
+            box-shadow: 0 0 5px #4CAF50;
+            animation: pulse-green 2s infinite;
+        }
+        @keyframes pulse-green {
+            0%, 100% { box-shadow: 0 0 3px #4CAF50; }
+            50% { box-shadow: 0 0 8px #4CAF50; }
+        }
+
         .messages {
             flex: 1;
             overflow-y: auto;
@@ -205,10 +242,14 @@
                     <div class="grupo"> <span id="grupoNombre"></span></div>
                 </div>
             </div>
-            <span class="usuario">👤 <span id="nombreUsuario"></span></span>
+            <span class="usuario">👤 <span id="nombreUsuario"></span>
+            </span>
         </div>
 
         <div class="status-bar" id="statusBar">Conectando...</div>
+
+        <!-- Barra de presencia de miembros -->
+        <div class="online-bar" id="onlineBar"></div>
 
         <div class="messages" id="messages">
             <div class="empty" id="empty">No hay mensajes todavía. ¡Di holis! 👋</div>
@@ -246,6 +287,10 @@
             document.getElementById('canalNombre').textContent = canalNombre;
             document.getElementById('grupoNombre').textContent = grupoNombre;
             document.getElementById('nombreUsuario').textContent = username;
+
+            // Mapa de presencia: username -> isOnline
+            const knownUsers = new Map();
+            knownUsers.set(username, true); // yo siempre aparezco como online
 
 
             async function enviarArchivo(input) {
@@ -308,6 +353,8 @@
                         data.messages.forEach(msg => {
                             const esMio = msg.sender?.username === username;
                             const fueLeido = msg.statuses && msg.statuses.some(s => s.readAt);
+                            // Registrar este usuario en la barra de presencia
+                            if (msg.sender?.username) registrarUsuario(msg.sender.username);
 
                             mostrarMensaje({
                                 username: msg.sender?.username || 'Usuario',
@@ -322,6 +369,7 @@
                                 status: fueLeido ? 'read' : 'delivered'
                             });
                         });
+                        renderOnlineBar();
                     }
                 } catch (e) { console.error(e); }
             }
@@ -333,6 +381,9 @@
             socket.on('connect', () => {
                 document.getElementById('statusBar').textContent = ' Conectado';
                 socket.emit('join_channel', canalId);
+
+                // Anunciar presencia en este canal
+                socket.emit('user_join_presence', { channelId: canalId, username });
 
                 // Primero el socket (inmediato)
                 socket.emit('mark_read', { channelId: canalId, username });
@@ -361,6 +412,30 @@
                     });
                 }
             });
+
+            // Presencia: lista completa de usuarios online en el canal
+            socket.on('online_users', ({ users: onlineList }) => {
+                // Marcar todos los conocidos como offline, luego poner online los de la lista
+                for (const u of knownUsers.keys()) knownUsers.set(u, false);
+                for (const u of onlineList) knownUsers.set(u, true);
+                renderOnlineBar();
+            });
+
+            // Construir knownUsers desde el historial de mensajes
+            function registrarUsuario(uname) {
+                if (!knownUsers.has(uname)) knownUsers.set(uname, false);
+            }
+
+            function renderOnlineBar() {
+                const bar = document.getElementById('onlineBar');
+                if (knownUsers.size === 0) { bar.innerHTML = ''; return; }
+                bar.innerHTML = [...knownUsers.entries()].map(([u, isOnline]) => `
+                    <span class="presence-pill">
+                        <span class="dot ${isOnline ? 'online' : ''}"></span>
+                        <span style="color:${isOnline ? '#4CAF50' : '#aaa'}">${u}</span>
+                    </span>
+                `).join('');
+            }
 
             // Cuando el otro usuario lee los mensajes
             socket.on('messages_read', (data) => {
