@@ -14,7 +14,7 @@
 
         body {
             font-family: Arial, sans-serif;
-            background: url('/fondochat.jpg') no-repeat center center fixed;
+            background: url('/2.png') no-repeat center center fixed;
             background-size: cover;
             height: 100vh;
             display: flex;
@@ -82,7 +82,7 @@
             text-align: center;
             padding: 4px;
             font-size: 11px;
-            color: #666;
+            color: #929191;
             background: transparent;
             flex-shrink: 0;
         }
@@ -202,7 +202,7 @@
                 <button class="volver" onclick="window.location.href='/canales.html'">‹</button>
                 <div class="info">
                     <div class="canal"> <span id="canalNombre"></span></div>
-                    <div class="grupo">📁 <span id="grupoNombre"></span></div>
+                    <div class="grupo"> <span id="grupoNombre"></span></div>
                 </div>
             </div>
             <span class="usuario">👤 <span id="nombreUsuario"></span></span>
@@ -215,114 +215,224 @@
         </div>
 
         <div class="input-area">
+            <input type="file" id="fileInput" style="display:none" onchange="enviarArchivo(this)" />
+            <button onclick="document.getElementById('fileInput').click()" style="
+        background: none;
+        border: 1.5px solid #f8bbd0;
+        color: #f48fb1;
+        padding: 10px 12px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 16px;
+    ">📎</button>
             <input id="messageInput" placeholder="Escribe un mensaje..."
                 onkeypress="if(event.key==='Enter') enviar()" />
             <button onclick="enviar()">Enviar</button>
         </div>
-    </div>
 
-    <script>
-        // Leer datos del localStorage automáticamente
-        const token = localStorage.getItem('token');
-        const username = localStorage.getItem('username');
-        const canalId = localStorage.getItem('canalId');
-        const canalNombre = localStorage.getItem('canalNombre');
-        const grupoNombre = localStorage.getItem('grupoNombre');
+        <script>
+            // Leer datos del localStorage automáticamente
+            const token = localStorage.getItem('token');
+            const username = localStorage.getItem('username');
+            const canalId = localStorage.getItem('canalId');
+            const canalNombre = localStorage.getItem('canalNombre');
+            const grupoNombre = localStorage.getItem('grupoNombre');
 
-        // Si no hay sesión, redirigir
-        if (!token) window.location.href = '/login.html';
-        if (!canalId) window.location.href = '/grupos.html';
+            // Si no hay sesión, redirigir
+            if (!token) window.location.href = '/login.html';
+            if (!canalId) window.location.href = '/grupos.html';
 
-        // Mostrar info en navbar
-        document.getElementById('canalNombre').textContent = canalNombre;
-        document.getElementById('grupoNombre').textContent = grupoNombre;
-        document.getElementById('nombreUsuario').textContent = username;
+            // Mostrar info en navbar
+            document.getElementById('canalNombre').textContent = canalNombre;
+            document.getElementById('grupoNombre').textContent = grupoNombre;
+            document.getElementById('nombreUsuario').textContent = username;
 
-        // Cargar historial de mensajes
-        async function cargarHistorial() {
-            try {
-                const response = await fetch(`/api/channels/${canalId}/messages`, {
+
+            async function enviarArchivo(input) {
+                const file = input.files[0];
+                if (!file) return;
+
+                const formData = new FormData();
+                formData.append('file', file);
+
+                // Mostrar preview inmediato
+                const isImage = file.type.startsWith('image/');
+                document.getElementById('empty').style.display = 'none';
+
+                mostrarMensaje({
+                    username,
+                    esMio: true,
+                    status: 'sent',
+                    content: isImage
+                        ? `<img src="${URL.createObjectURL(file)}" style="max-width:200px; border-radius:8px;">`
+                        : `📄 ${file.name}`,
+                    isHtml: true
+                });
+
+                try {
+                    const response = await fetch(`/api/channels/${canalId}/files`, {
+                        method: 'POST',
+                        headers: { 'Authorization': 'Bearer ' + token },
+                        body: formData
+                    });
+
+                    const data = await response.json();
+
+                    // Notificar por socket a los demás
+                    socket.emit('send_message', {
+                        channelId: canalId,
+                        username,
+                        content: data.data.type === 'image'
+                            ? `<img src="${data.data.fileUrl}" style="max-width:200px; border-radius:8px;">`
+                            : `📄 <a href="${data.data.fileUrl}" target="_blank">${data.data.content}</a>`,
+                        isHtml: true
+                    });
+
+                } catch (e) {
+                    console.error('Error subiendo archivo:', e);
+                }
+
+                input.value = '';
+            }
+
+            // Cargar historial de mensajes
+            async function cargarHistorial() {
+                try {
+                    const response = await fetch(`/api/channels/${canalId}/messages`, {
+                        headers: { 'Authorization': 'Bearer ' + token }
+                    });
+                    const data = await response.json();
+
+                    if (data.messages && data.messages.length > 0) {
+                        document.getElementById('empty').style.display = 'none';
+                        data.messages.forEach(msg => {
+                            const esMio = msg.sender?.username === username;
+                            const fueLeido = msg.statuses && msg.statuses.some(s => s.readAt);
+
+                            mostrarMensaje({
+                                username: msg.sender?.username || 'Usuario',
+                                content: msg.type === 'image'
+                                    ? `<img src="${msg.fileUrl}" style="max-width:200px; border-radius:8px;">`
+                                    : msg.type === 'file'
+                                    ? `📄 <a href="${msg.fileUrl}" target="_blank">${msg.content}</a>`
+                                    : msg.content,
+                                isHtml: msg.type !== 'text',
+                                tiempo: new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                                esMio,
+                                status: fueLeido ? 'read' : 'delivered'
+                            });
+                        });
+                    }
+                } catch (e) { console.error(e); }
+            }
+            cargarHistorial();
+
+            // Conectar Socket.IO automáticamente
+            const socket = io('http://localhost:3000');
+
+            socket.on('connect', () => {
+                document.getElementById('statusBar').textContent = ' Conectado';
+                socket.emit('join_channel', canalId);
+
+                // Primero el socket (inmediato)
+                socket.emit('mark_read', { channelId: canalId, username });
+
+                // Luego guardar en BD (en segundo plano)
+                fetch(`/api/channels/${canalId}/read`, {
+                    method: 'PUT',
                     headers: { 'Authorization': 'Bearer ' + token }
                 });
-                const data = await response.json();
-
-                if (data.messages && data.messages.length > 0) {
-                    document.getElementById('empty').style.display = 'none';
-                    data.messages.forEach(msg => {
-                        mostrarMensaje({
-                            username: msg.sender?.username || 'Usuario',
-                            content: msg.content,
-                            tiempo: new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                        });
-                    });
-                }
-            } catch (e) { console.error(e); }
-        }
-
-        cargarHistorial();
-
-        // Conectar Socket.IO automáticamente
-        const socket = io('http://localhost:3000');
-
-        socket.on('connect', () => {
-            document.getElementById('statusBar').textContent = ' Conectado';
-            socket.emit('join_channel', canalId);
-        });
-
-        socket.on('disconnect', () => {
-            document.getElementById('statusBar').textContent = 'Desconectado';
-        });
-
-        socket.on('new_message', (data) => {
-            if (data.username !== username) {
-                document.getElementById('empty').style.display = 'none';
-                mostrarMensaje(data);
-            }
-        });
-
-        function enviar() {
-            const input = document.getElementById('messageInput');
-            const content = input.value.trim();
-            if (!content) return;
-
-            const data = { channelId: canalId, content, username };
-
-            // Mostrar mi mensaje inmediatamente
-            document.getElementById('empty').style.display = 'none';
-            mostrarMensaje({ ...data, esMio: true });
-
-            // Enviar por socket
-            socket.emit('send_message', data);
-
-            // También guardar en BD
-            fetch(`/api/channels/${canalId}/messages`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token
-                },
-                body: JSON.stringify({ content })
             });
 
-            input.value = '';
-        }
+            socket.on('disconnect', () => {
+                document.getElementById('statusBar').textContent = 'Desconectado';
+            });
 
-        function mostrarMensaje(data) {
-            const messages = document.getElementById('messages');
-            const isMine = data.esMio || data.username === username;
-            const hora = data.tiempo || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            socket.on('new_message', (data) => {
+                if (data.username !== username) {
+                    document.getElementById('empty').style.display = 'none';
+                    mostrarMensaje(data);
 
-            const div = document.createElement('div');
-            div.className = `message ${isMine ? 'mine' : 'other'}`;
-            div.innerHTML = `
-        ${!isMine ? `<div class="sender">${data.username}</div>` : ''}
-        <div class="bubble">${data.content}</div>
-        <div class="tiempo">${hora}</div>
-      `;
-            messages.appendChild(div);
-            messages.scrollTop = messages.scrollHeight;
-        }
-    </script>
+                    // Marcar como leído inmediatamente (como WhatsApp)
+                    socket.emit('mark_read', { channelId: canalId, username });
+                    fetch(`/api/channels/${canalId}/read`, {
+                        method: 'PUT',
+                        headers: { 'Authorization': 'Bearer ' + token }
+                    });
+                }
+            });
+
+            // Cuando el otro usuario lee los mensajes
+            socket.on('messages_read', (data) => {
+                if (data.channelId === canalId) {
+                    document.querySelectorAll('.chulito').forEach(el => {
+                        el.innerHTML = '<span style="color:#e91e8c">✓✓</span>';
+                    });
+                }
+            });
+
+            function enviar() {
+                const input = document.getElementById('messageInput');
+                const content = input.value.trim();
+                if (!content) return;
+
+                const msgId = 'temp-' + Date.now();
+                const data = { channelId: canalId, content, username, tempId: msgId };
+
+                // Mostrar mi mensaje inmediatamente con chulito ✓
+                document.getElementById('empty').style.display = 'none';
+                mostrarMensaje({ ...data, esMio: true, status: 'sent' });
+
+                // Enviar por socket
+                socket.emit('send_message', data);
+
+                // Guardar en BD
+                fetch(`/api/channels/${canalId}/messages`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({ content })
+                }).then(r => r.json()).then(data => {
+                    // Actualizar chulito a ✓✓ cuando se guardó en BD
+                    const el = document.querySelector(`[data-tempid="${msgId}"] .chulito`);
+                    if (el) el.textContent = '✓✓';
+                });
+
+                input.value = '';
+            }
+
+            function mostrarMensaje(data) {
+                const messages = document.getElementById('messages');
+                const isMine = data.esMio || data.username === username;
+                const hora = data.tiempo || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                // Chulito según estado
+                let chulito = '';
+                if (isMine) {
+                    if (data.status === 'sent') chulito = '✓';
+                    else if (data.status === 'delivered') chulito = '✓✓';
+                    else if (data.status === 'read') chulito = '<span style="color:#e91e8c">✓✓</span>';
+                    else chulito = '✓✓';
+                }
+
+                const div = document.createElement('div');
+                div.className = `message ${isMine ? 'mine' : 'other'}`;
+                if (data.tempId) div.setAttribute('data-tempid', data.tempId);
+
+                div.innerHTML = `
+                ${!isMine ? `<div class="sender">${data.username}</div>` : ''}
+                <div class="bubble">${data.isHtml ? data.content : data.content}</div>
+                <div class="tiempo">
+                ${hora}
+                ${isMine ? `<span class="chulito" style="margin-left:4px; font-size:11px;">${chulito}</span>` : ''}
+                </div>
+            `;
+                messages.appendChild(div);
+                messages.scrollTop = messages.scrollHeight;
+            }
+        </script>
 </body>
 
 </html>

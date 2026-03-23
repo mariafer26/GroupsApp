@@ -17,15 +17,16 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background: url('/fondo2.jpg') no-repeat center center fixed;
+            background: linear-gradient(135deg, #1f2937, #111827);
             background-size: cover;
         }
 
         .card {
             position: relative;
             z-index: 1;
-            background: rgba(255, 255, 255, 0.88);
-            backdrop-filter: blur(12px);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             padding: 40px;
             border-radius: 20px;
             width: 100%;
@@ -39,7 +40,7 @@
         }
 
         .logo h1 {
-            color: #e91e8c;
+            color: #f9f7f8;
             font-size: 28px;
         }
 
@@ -53,24 +54,24 @@
             width: 100%;
             padding: 12px 15px;
             margin: 8px 0;
-            border: 1.5px solid #f8bbd0;
+            border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 10px;
             font-size: 15px;
             outline: none;
-            background: #fff0f5;
+            background: rgba(255, 255, 255, 0.12);
             transition: border 0.2s;
         }
 
         input:focus {
-            border-color: #e91e8c;
-            background: white;
+            border-color: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(250, 247, 247, 0.526);
         }
 
         button {
             width: 100%;
             padding: 13px;
-            background: linear-gradient(135deg, #f48fb1, #e91e8c);
-            color: white;
+            background: rgba(255, 255, 255, 0.3);
+            color: rgb(92, 90, 90);
             border: none;
             border-radius: 10px;
             font-size: 16px;
@@ -89,7 +90,7 @@
         }
 
         .error {
-            background: #ffe0e0;
+            background: rgba(255, 255, 255, 0.7);
             color: #c0392b;
             padding: 10px;
             border-radius: 8px;
@@ -116,7 +117,7 @@
         }
 
         .login-link a {
-            color: #e91e8c;
+            color: rgba(149, 141, 141, 0.803);
             text-decoration: none;
             font-weight: bold;
         }
@@ -127,7 +128,7 @@
 
     <div class="card">
         <div class="logo">
-            <h1>💬 GroupsApp</h1>
+            <h1>GroupsApp</h1>
             <p>Crea tu cuenta</p>
         </div>
 

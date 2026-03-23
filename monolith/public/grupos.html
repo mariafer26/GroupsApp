@@ -13,42 +13,45 @@
 
         body {
             font-family: Arial, sans-serif;
-            background: url('/fondochat.jpg') no-repeat center center fixed;
+            background: url('/planteal.jpg') no-repeat center center fixed;
             background-size: cover;
             min-height: 100vh;
         }
 
         .navbar {
-            background: white;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             padding: 15px 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 10px rgba(244, 143, 177, 0.15);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .navbar h1 {
-            color: #f48fb1;
+            color: #fff;
             font-size: 22px;
         }
 
         .navbar .user {
-            color: #aaa;
+            color: rgba(255, 255, 255, 0.7);
             font-size: 14px;
         }
 
         .navbar button {
-            background: none;
-            border: 1.5px solid #f48fb1;
-            color: #f48fb1;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
             padding: 6px 15px;
             border-radius: 8px;
             cursor: pointer;
             font-size: 13px;
+            transition: background 0.2s;
         }
 
         .navbar button:hover {
-            background: #fce4ec;
+            background: rgba(255, 255, 255, 0.25);
         }
 
         .container {
@@ -60,11 +63,13 @@
         /* Tabs */
         .tabs {
             display: flex;
-            background: #fff0f5;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             border-radius: 12px;
             padding: 5px;
             margin-bottom: 20px;
-            border: 1.5px solid #f8bbd0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .tab {
@@ -74,29 +79,31 @@
             border-radius: 9px;
             cursor: pointer;
             font-size: 14px;
-            color: #aaa;
+            color: rgba(255, 255, 255, 0.6);
             transition: all 0.2s;
             border: none;
             background: none;
         }
 
         .tab.active {
-            background: linear-gradient(135deg, #f48fb1, #e91e8c);
+            background: rgba(255, 255, 255, 0.2);
             color: white;
             font-weight: bold;
         }
 
         /* Formularios */
         .form-box {
-            background: #fff0f5;
-            border: 1.5px solid #f8bbd0;
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 15px;
             padding: 20px;
             margin-bottom: 30px;
         }
 
         .form-box h2 {
-            color: #f48fb1;
+            color: #fff;
             margin-bottom: 15px;
             font-size: 16px;
         }
@@ -105,45 +112,55 @@
             width: 100%;
             padding: 10px 15px;
             margin: 6px 0;
-            border: 1.5px solid #f8bbd0;
+            border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 10px;
             font-size: 14px;
             outline: none;
-            background: white;
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+        }
+
+        .form-box input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
         }
 
         .form-box input:focus {
-            border-color: #f48fb1;
+            border-color: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.2);
         }
 
         .form-box button.btn-main {
             width: 100%;
             padding: 11px;
-            background: linear-gradient(135deg, #f48fb1, #e91e8c);
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             color: white;
-            border: none;
+            border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 10px;
             font-size: 15px;
             cursor: pointer;
             margin-top: 8px;
-            transition: opacity 0.2s, transform 0.1s;
+            transition: background 0.2s, transform 0.1s;
         }
 
         .form-box button.btn-main:hover {
-            opacity: 0.9;
+            background: rgba(255, 255, 255, 0.3);
             transform: translateY(-1px);
         }
 
         /* Lista grupos */
         .grupos-titulo {
-            color: #f48fb1;
+            color: rgba(255, 255, 255, 0.8);
             font-size: 16px;
             margin-bottom: 15px;
         }
 
         .grupo-card {
-            background: white;
-            border: 1.5px solid #f8bbd0;
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 12px;
             padding: 15px 20px;
             margin-bottom: 12px;
@@ -154,9 +171,9 @@
         }
 
         .grupo-card:hover {
-            background: #fff0f5;
+            background: rgba(255, 255, 255, 0.12);
             transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(244, 143, 177, 0.15);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
         }
 
         .grupo-card .info {
@@ -165,21 +182,21 @@
         }
 
         .grupo-card .nombre {
-            color: #333;
+            color: #fff;
             font-size: 16px;
             font-weight: bold;
         }
 
         .grupo-card .desc {
-            color: #aaa;
+            color: rgba(255, 255, 255, 0.6);
             font-size: 13px;
             margin-top: 3px;
         }
 
         .btn-codigo {
-            background: none;
-            border: 1.5px solid #f8bbd0;
-            color: #f48fb1;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            color: #fff;
             padding: 6px 12px;
             border-radius: 8px;
             cursor: pointer;
@@ -190,7 +207,7 @@
         }
 
         .btn-codigo:hover {
-            background: #fce4ec;
+            background: rgba(255, 255, 255, 0.25);
         }
 
         /* Modal código */
@@ -212,40 +229,43 @@
         }
 
         .modal {
-            background: white;
+            background: rgba(30, 30, 40, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 20px;
             padding: 30px;
             width: 90%;
             max-width: 380px;
             text-align: center;
-            box-shadow: 0 8px 32px rgba(244, 143, 177, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
 
         .modal h3 {
-            color: #f48fb1;
+            color: #fff;
             margin-bottom: 15px;
             font-size: 18px;
         }
 
         .codigo-box {
-            background: #fff0f5;
-            border: 1.5px dashed #f48fb1;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1.5px dashed rgba(255, 255, 255, 0.3);
             border-radius: 10px;
             padding: 15px;
             font-size: 28px;
             font-weight: bold;
-            color: #e91e8c;
+            color: #fff;
             letter-spacing: 4px;
             margin: 15px 0;
         }
 
         .link-box {
-            background: #f9f9f9;
-            border: 1px solid #eee;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 8px;
             padding: 8px 12px;
             font-size: 12px;
-            color: #888;
+            color: rgba(255, 255, 255, 0.6);
             word-break: break-all;
             margin-bottom: 15px;
         }
@@ -265,25 +285,26 @@
         }
 
         .btn-copiar {
-            background: linear-gradient(135deg, #f48fb1, #e91e8c);
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
             color: white;
         }
 
         .btn-cerrar {
-            background: #f5f5f5;
-            color: #888;
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.7);
         }
 
         .empty {
             text-align: center;
-            color: #ccc;
+            color: rgba(255, 255, 255, 0.5);
             padding: 40px;
             font-size: 15px;
         }
 
         .error {
-            background: #ffe0e0;
-            color: #c0392b;
+            background: rgba(192, 57, 43, 0.25);
+            color: #ff6b6b;
             padding: 10px;
             border-radius: 8px;
             font-size: 14px;
@@ -292,8 +313,8 @@
         }
 
         .success {
-            background: #fce4ec;
-            color: #e91e8c;
+            background: rgba(46, 204, 113, 0.2);
+            color: #2ecc71;
             padding: 10px;
             border-radius: 8px;
             font-size: 14px;
@@ -306,7 +327,7 @@
 <body>
 
     <div class="navbar">
-        <h1>💬 GroupsApp</h1>
+        <h1> GroupsApp</h1>
         <span class="user" id="nombreUsuario"></span>
         <button onclick="cerrarSesion()">Cerrar sesión</button>
     </div>
@@ -352,9 +373,7 @@
             <h3>🔗 Código de invitación</h3>
             <p style="color:#aaa; font-size:13px;">Comparte este código para que otros se unan</p>
             <div class="codigo-box" id="modalCodigo"></div>
-            <div class="link-box" id="modalLink"></div>
             <div class="modal-btns">
-                <button class="btn-copiar" onclick="copiarLink()">📋 Copiar link</button>
                 <button class="btn-cerrar" onclick="cerrarModal()">Cerrar</button>
             </div>
         </div>
@@ -395,7 +414,7 @@
                     div.className = 'grupo-card';
                     div.innerHTML = `
             <div class="info" onclick="abrirGrupo('${grupo.id}', '${grupo.name}')">
-              <div class="nombre">👥 ${grupo.name}</div>
+              <div class="nombre"> ${grupo.name}</div>
               <div class="desc">${grupo.description || 'Sin descripción'}</div>
             </div>
             <button class="btn-codigo" onclick="generarCodigo('${grupo.id}')">🔑 Código</button>
@@ -464,15 +483,14 @@
                 const data = await response.json();
 
                 document.getElementById('modalCodigo').textContent = data.inviteCode;
-                document.getElementById('modalLink').textContent = data.inviteLink;
                 document.getElementById('modalOverlay').classList.add('show');
             } catch (e) { alert('Error al generar código'); }
         }
 
         function copiarLink() {
-            const link = document.getElementById('modalLink').textContent;
-            navigator.clipboard.writeText(link);
-            alert('¡Link copiado al portapapeles!');
+            const code = document.getElementById('modalCodigo').textContent;
+            navigator.clipboard.writeText(code);
+            alert('¡Código copiado al portapapeles!');
         }
 
         function cerrarModal() {

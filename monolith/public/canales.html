@@ -13,13 +13,14 @@
 
         body {
             font-family: Arial, sans-serif;
-            background: url('/fondochat.jpg') no-repeat center center fixed;
+            background: url('/planteal.jpg') no-repeat center center fixed;
             background-size: cover;
             min-height: 100vh;
         }
 
         .navbar {
-            background: white;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
             padding: 15px 30px;
             display: flex;
             justify-content: space-between;
@@ -34,12 +35,12 @@
         }
 
         .navbar h1 {
-            color: #f48fb1;
+            color: #ffffff;
             font-size: 20px;
         }
 
         .navbar .grupo-nombre {
-            color: #333;
+            color: #c6c3c3;
             font-size: 16px;
             font-weight: bold;
         }
@@ -59,15 +60,17 @@
         }
 
         .crear-canal {
-            background: #fff0f5;
-            border: 1.5px solid #f8bbd0;
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 15px;
             padding: 20px;
             margin-bottom: 30px;
         }
 
         .crear-canal h2 {
-            color: #f48fb1;
+            color: #ffffff;
             margin-bottom: 15px;
             font-size: 16px;
         }
@@ -76,23 +79,23 @@
             width: 100%;
             padding: 10px 15px;
             margin: 6px 0;
-            border: 1.5px solid #f8bbd0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 10px;
             font-size: 14px;
             outline: none;
-            background: white;
+            background: rgba(255, 255, 255, 0.15);
         }
 
         .crear-canal input:focus {
-            border-color: #f48fb1;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .crear-canal button {
             width: 100%;
             padding: 11px;
-            background: linear-gradient(135deg, #f48fb1, #e91e8c);
+            background: rgba(255, 255, 255, 0.15);
             color: white;
-            border: none;
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 10px;
             font-size: 15px;
             cursor: pointer;
@@ -106,14 +109,16 @@
         }
 
         .canales-titulo {
-            color: #f48fb1;
+            color: #ffffff;
             font-size: 16px;
             margin-bottom: 15px;
         }
 
         .canal-card {
-            background: white;
-            border: 1.5px solid #f8bbd0;
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 12px;
             padding: 18px 20px;
             margin-bottom: 12px;
@@ -125,13 +130,13 @@
         }
 
         .canal-card:hover {
-            background: #fff0f5;
+            background: rgba(255, 255, 255, 0.2);
             transform: translateY(-2px);
             box-shadow: 0 4px 15px rgba(244, 143, 177, 0.15);
         }
 
         .canal-card .nombre {
-            color: #333;
+            color: #dad5d5;
             font-size: 16px;
             font-weight: bold;
         }
@@ -176,7 +181,7 @@
     <div class="container">
 
         <div class="crear-canal">
-            <h2>➕ Crear nuevo canal</h2>
+            <h2> Crear nuevo canal</h2>
             <input id="nombreCanal" type="text" placeholder="Nombre del canal (ej: general, anuncios)" />
             <button onclick="crearCanal()">Crear canal</button>
             <div class="error" id="error"></div>
@@ -222,7 +227,7 @@
                     const div = document.createElement('div');
                     div.className = 'canal-card';
                     div.innerHTML = `
-            <div class="nombre"># ${canal.name}</div>
+            <div class="nombre"> ${canal.name}</div>
             <span class="flecha">›</span>
           `;
                     div.onclick = () => {

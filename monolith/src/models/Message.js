@@ -2,6 +2,7 @@ const { DataTypes } = require('sequelize');
 const { sequelize } = require('../database');
 const User = require('./User');
 const Channel = require('./Channel');
+const MessageStatus = require('./MessageStatus');
 
 const Message = sequelize.define('Message', {
     id: {
@@ -31,5 +32,7 @@ const Message = sequelize.define('Message', {
 
 Message.belongsTo(User, { foreignKey: 'senderId', as: 'sender' });
 Message.belongsTo(Channel, { foreignKey: 'channelId' });
+Message.hasMany(MessageStatus, { foreignKey: 'messageId', as: 'statuses' });
+
 
 module.exports = Message;
