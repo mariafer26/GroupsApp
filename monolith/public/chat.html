@@ -92,7 +92,7 @@
             padding: 5px 16px;
             font-size: 11px;
             color: #aaa;
-            border-bottom: 1px solid rgba(255,255,255,0.15);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
@@ -100,12 +100,14 @@
             min-height: 26px;
             align-items: center;
         }
+
         .presence-pill {
             display: inline-flex;
             align-items: center;
             gap: 4px;
             font-size: 11px;
         }
+
         .presence-pill .dot {
             width: 7px;
             height: 7px;
@@ -114,14 +116,23 @@
             transition: background 0.4s;
             flex-shrink: 0;
         }
+
         .presence-pill .dot.online {
             background: #4CAF50;
             box-shadow: 0 0 5px #4CAF50;
             animation: pulse-green 2s infinite;
         }
+
         @keyframes pulse-green {
-            0%, 100% { box-shadow: 0 0 3px #4CAF50; }
-            50% { box-shadow: 0 0 8px #4CAF50; }
+
+            0%,
+            100% {
+                box-shadow: 0 0 3px #4CAF50;
+            }
+
+            50% {
+                box-shadow: 0 0 8px #4CAF50;
+            }
         }
 
         .messages {
@@ -361,8 +372,8 @@
                                 content: msg.type === 'image'
                                     ? `<img src="${msg.fileUrl}" style="max-width:200px; border-radius:8px;">`
                                     : msg.type === 'file'
-                                    ? `📄 <a href="${msg.fileUrl}" target="_blank">${msg.content}</a>`
-                                    : msg.content,
+                                        ? `📄 <a href="${msg.fileUrl}" target="_blank">${msg.content}</a>`
+                                        : msg.content,
                                 isHtml: msg.type !== 'text',
                                 tiempo: new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                                 esMio,
@@ -376,7 +387,7 @@
             cargarHistorial();
 
             // Conectar Socket.IO automáticamente
-            const socket = io('http://localhost:3000');
+            const socket = io();
 
             socket.on('connect', () => {
                 document.getElementById('statusBar').textContent = ' Conectado';
